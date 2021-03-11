@@ -153,6 +153,9 @@ func (p *AzureProvider) Redeem(ctx context.Context, redirectURL, code string) (*
 		RefreshToken: jsonResponse.RefreshToken,
 	}
 
+	logger.Printf("DEBUG: IDToken = %+v", session.IDToken)
+	logger.Printf("DEBUG: AccessToken = %+v", session.AccessToken)
+
 	email, err := p.verifyTokenAndExtractEmail(ctx, session.IDToken)
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/pull/914#issuecomment-782285814
@@ -293,6 +296,7 @@ func (p *AzureProvider) redeemRefreshToken(ctx context.Context, s *sessions.Sess
 
 	email, err := p.verifyTokenAndExtractEmail(ctx, s.IDToken)
 	logger.Printf("DEBUG: IDToken = %+v", s.IDToken)
+	logger.Printf("DEBUG: AccessToken = %+v", s.AccessToken)
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/pull/914#issuecomment-782285814
 	// https://github.com/AzureAD/azure-activedirectory-library-for-java/issues/117
