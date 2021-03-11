@@ -292,6 +292,7 @@ func (p *AzureProvider) redeemRefreshToken(ctx context.Context, s *sessions.Sess
 	s.ExpiresOn = &expires
 
 	email, err := p.verifyTokenAndExtractEmail(ctx, s.IDToken)
+	logger.Printf("DEBUG: IDToken = %+v", s.IDToken)
 
 	// https://github.com/oauth2-proxy/oauth2-proxy/pull/914#issuecomment-782285814
 	// https://github.com/AzureAD/azure-activedirectory-library-for-java/issues/117
@@ -357,6 +358,8 @@ func (p *AzureProvider) getEmailFromProfileAPI(ctx context.Context, accessToken 
 	if err != nil {
 		return "", err
 	}
+
+	logger.Printf("DEBUG: ProfileAPI returned: %+v", json)
 
 	return getEmailFromJSON(json)
 }
