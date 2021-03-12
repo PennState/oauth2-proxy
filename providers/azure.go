@@ -178,9 +178,6 @@ func (p *AzureProvider) Redeem(ctx context.Context, redirectURL, code string) (*
 }
 
 func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *sessions.SessionState) error {
-	logger.Printf("DEBUG: IDToken = %+v", session.IDToken)
-	logger.Printf("DEBUG: AccessToken = %+v", session.AccessToken)
-
 	// https://github.com/oauth2-proxy/oauth2-proxy/pull/914#issuecomment-782285814
 	// https://github.com/AzureAD/azure-activedirectory-library-for-java/issues/117
 	// due to above issues, id_token may not be signed by AAD
@@ -351,8 +348,6 @@ func (p *AzureProvider) getUserFromProfileAPI(ctx context.Context, accessToken s
 	if err != nil {
 		return azureUserProfile{}, err
 	}
-
-	logger.Printf("DEBUG: ProfileAPI returned: %+v", user)
 
 	return user, nil
 }
