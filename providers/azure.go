@@ -342,22 +342,19 @@ func (p *AzureProvider) getUserFromProfileAPI(ctx context.Context, accessToken s
 		return azureUserProfile{}, errors.New("missing access token")
 	}
 
-	resp := struct {
-		Data azureUserProfile `json:"data"`
-	}{Data: azureUserProfile{}}
-
+	user := azureUserProfile{}
 	err := requests.New(p.ProfileURL.String()).
 		WithContext(ctx).
 		WithHeaders(makeAzureHeader(accessToken)).
 		Do().
-		UnmarshalInto(&resp)
+		UnmarshalInto(&user)
 	if err != nil {
 		return azureUserProfile{}, err
 	}
 
-	logger.Printf("DEBUG: ProfileAPI returned: %+v", resp)
+	logger.Printf("DEBUG: ProfileAPI returned: %+v", user)
 
-	return resp.Data, nil
+	return user, nil
 }
 
 // ValidateSession validates the AccessToken
