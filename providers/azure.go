@@ -167,6 +167,7 @@ func (p *AzureProvider) Redeem(ctx context.Context, redirectURL, code string) (*
 		CreatedAt:    &created,
 		ExpiresOn:    &expires,
 		RefreshToken: jsonResponse.RefreshToken,
+		ExtraClaims:  make(map[string]string),
 	}
 
 	err = p.populateSessionFromToken(ctx, session)
