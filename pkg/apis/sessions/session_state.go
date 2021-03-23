@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"reflect"
 	"time"
 	"unicode/utf8"
@@ -97,7 +98,9 @@ func (s *SessionState) GetClaim(claim string) []string {
 	case "preferred_username":
 		return []string{s.PreferredUsername}
 	default:
+		log.Printf("GetClaim: %s", claim)
 		if v, ok := s.ExtraClaims[claim]; ok {
+			log.Printf("GetClaim: Found value, %s = %s", claim, v)
 			return []string{v}
 		}
 		return []string{}
