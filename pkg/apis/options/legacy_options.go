@@ -216,10 +216,6 @@ func (l *LegacyHeaders) getRequestHeaders() []Header {
 		requestHeaders = append(requestHeaders, getAuthorizationHeader())
 	}
 
-	if len(l.ExtraClaims) > 0 {
-		requestHeaders = append(requestHeaders, l.getExtraClaimsHeaders()...)
-	}
-
 	for i := range requestHeaders {
 		requestHeaders[i].PreserveRequestValue = !l.SkipAuthStripHeaders
 	}
@@ -267,6 +263,8 @@ func (l *LegacyHeaders) getExtraClaimsHeaders() []Header {
 			},
 		})
 	}
+
+	logger.Printf("ExtraClaimsHeaders: %+v", headers)
 
 	return headers
 }
