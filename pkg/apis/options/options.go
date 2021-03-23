@@ -97,6 +97,8 @@ type Options struct {
 	UserIDClaim                        string   `flag:"user-id-claim" cfg:"user_id_claim"`
 	AllowedGroups                      []string `flag:"allowed-group" cfg:"allowed_groups"`
 
+	ExtraClaims []string `flag:",internal"`
+
 	SignatureKey    string `flag:"signature-key" cfg:"signature_key"`
 	AcrValues       string `flag:"acr-values" cfg:"acr_values"`
 	JWTKey          string `flag:"jwt-key" cfg:"jwt_key"`
