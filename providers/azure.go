@@ -206,7 +206,9 @@ func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *s
 			}
 
 			for _, c := range p.ExtraClaims {
+				logger.Printf("Checking for extra claim %s", c)
 				if v, ok := claims.raw[c].(string); ok {
+					logger.Printf("Found extra claim, storing in session %s = %s", c, v)
 					session.ExtraClaims[c] = v
 				}
 			}
