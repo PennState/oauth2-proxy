@@ -24,10 +24,11 @@ type SessionState struct {
 	IDToken      string `msgpack:"it,omitempty"`
 	RefreshToken string `msgpack:"rt,omitempty"`
 
-	Email             string   `msgpack:"e,omitempty"`
-	User              string   `msgpack:"u,omitempty"`
-	Groups            []string `msgpack:"g,omitempty"`
-	PreferredUsername string   `msgpack:"pu,omitempty"`
+	Email             string            `msgpack:"e,omitempty"`
+	User              string            `msgpack:"u,omitempty"`
+	Groups            []string          `msgpack:"g,omitempty"`
+	PreferredUsername string            `msgpack:"pu,omitempty"`
+	ExtraClaims       map[string]string `msgpack:"ec,omitempty"`
 }
 
 // IsExpired checks whether the session has expired
@@ -96,6 +97,9 @@ func (s *SessionState) GetClaim(claim string) []string {
 	case "preferred_username":
 		return []string{s.PreferredUsername}
 	default:
+		if v, ok := s.ExtraClaims[claim]; ok {
+			return []string{v}
+		}
 		return []string{}
 	}
 }

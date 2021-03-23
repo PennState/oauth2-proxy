@@ -152,10 +152,11 @@ func (l *LegacyUpstreams) convert() (Upstreams, error) {
 }
 
 type LegacyHeaders struct {
-	PassBasicAuth     bool `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
-	PassAccessToken   bool `flag:"pass-access-token" cfg:"pass_access_token"`
-	PassUserHeaders   bool `flag:"pass-user-headers" cfg:"pass_user_headers"`
-	PassAuthorization bool `flag:"pass-authorization-header" cfg:"pass_authorization_header"`
+	PassBasicAuth     bool     `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
+	PassAccessToken   bool     `flag:"pass-access-token" cfg:"pass_access_token"`
+	PassUserHeaders   bool     `flag:"pass-user-headers" cfg:"pass_user_headers"`
+	PassAuthorization bool     `flag:"pass-authorization-header" cfg:"pass_authorization_header"`
+	ExtraClaims       []string `flag:"pass-extra-claims" cfg:"pass_extra_claims"`
 
 	SetBasicAuth     bool `flag:"set-basic-auth" cfg:"set_basic_auth"`
 	SetXAuthRequest  bool `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
@@ -173,6 +174,7 @@ func legacyHeadersFlagSet() *pflag.FlagSet {
 	flagSet.Bool("pass-access-token", false, "pass OAuth access_token to upstream via X-Forwarded-Access-Token header")
 	flagSet.Bool("pass-user-headers", true, "pass X-Forwarded-User and X-Forwarded-Email information to upstream")
 	flagSet.Bool("pass-authorization-header", false, "pass the Authorization Header to upstream")
+	flagSet.StringSlice("pass-extra-claims", []string{}, "pass extra claims via headers of the form x-auth-request-$claim if present")
 
 	flagSet.Bool("set-basic-auth", false, "set HTTP Basic Auth information in response (useful in Nginx auth_request mode)")
 	flagSet.Bool("set-xauthrequest", false, "set X-Auth-Request-User and X-Auth-Request-Email response headers (useful in Nginx auth_request mode)")
@@ -212,6 +214,10 @@ func (l *LegacyHeaders) getRequestHeaders() []Header {
 		requestHeaders = append(requestHeaders, getAuthorizationHeader())
 	}
 
+	if len(l.ExtraClaims) > 0 {
+		requestHeaders = append(requestHeaders, l.getExtraClaimsHeaders()...)
+	}
+
 	for i := range requestHeaders {
 		requestHeaders[i].PreserveRequestValue = !l.SkipAuthStripHeaders
 	}
@@ -237,7 +243,30 @@ func (l *LegacyHeaders) getResponseHeaders() []Header {
 		responseHeaders = append(responseHeaders, getAuthorizationHeader())
 	}
 
+	if len(l.ExtraClaims) > 0 {
+		responseHeaders = append(responseHeaders, l.getExtraClaimsHeaders()...)
+	}
+
 	return responseHeaders
+}
+
+func (l *LegacyHeaders) getExtraClaimsHeaders() []Header {
+	headers := []Header{}
+
+	for _, h := range l.ExtraClaims {
+		headers = append(headers, Header{
+			Name: fmt.Sprintf("x-auth-request-%s", h),
+			Values: []HeaderValue{
+				{
+					ClaimSource: &ClaimSource{
+						Claim: h,
+					},
+				},
+			},
+		})
+	}
+
+	return headers
 }
 
 func getBasicAuthHeader(preferEmailToUser bool, basicAuthPassword string) Header {

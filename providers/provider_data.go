@@ -48,6 +48,8 @@ type ProviderData struct {
 	// Universal Group authorization data structure
 	// any provider can set to consume
 	AllowedGroups map[string]struct{}
+
+	ExtraClaims []string
 }
 
 // Data returns the ProviderData
@@ -165,6 +167,12 @@ func (p *ProviderData) buildSessionFromClaims(idToken *oidc.IDToken) (*sessions.
 	verifyEmail := (p.EmailClaim == OIDCEmailClaim) && !p.AllowUnverifiedEmail
 	if verifyEmail && claims.Verified != nil && !*claims.Verified {
 		return nil, fmt.Errorf("email in id_token (%s) isn't verified", claims.Email)
+	}
+
+	for _, c := range p.ExtraClaims {
+		if v, ok := claims.raw[c].(string); ok {
+			ss.ExtraClaims[c] = v
+		}
 	}
 
 	return ss, nil

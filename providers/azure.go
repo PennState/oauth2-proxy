@@ -189,15 +189,26 @@ func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *s
 				return fmt.Errorf("unable to get claims from %s: %v", n, err)
 			}
 
-			if claims.Email != "" {
-				session.Email = claims.Email
+			if session.Email == "" {
+				// otherwise fall back to email claim
+				if claims.Email != "" {
+					session.Email = claims.Email
+				}
 			}
 
-			// set User from azureUserClaim, or from Email if it's set
-			if claims.raw[azureUserClaim] != "" {
-				session.User = fmt.Sprint(claims.raw[azureUserClaim])
-			} else if session.Email != "" {
-				session.User = session.Email
+			if session.User == "" {
+				// set User from azureUserClaim, or from Email if it's set
+				if claims.raw[azureUserClaim] != "" {
+					session.User = fmt.Sprint(claims.raw[azureUserClaim])
+				} else if session.Email != "" {
+					session.User = session.Email
+				}
+			}
+
+			for _, c := range p.ExtraClaims {
+				if v, ok := claims.raw[c].(string); ok {
+					session.ExtraClaims[c] = v
+				}
 			}
 		}
 	}
