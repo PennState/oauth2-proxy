@@ -245,6 +245,8 @@ func (l *LegacyHeaders) getResponseHeaders() []Header {
 		responseHeaders = append(responseHeaders, l.getExtraClaimsHeaders()...)
 	}
 
+	logger.Printf("responseHeaders: %+v", responseHeaders)
+
 	return responseHeaders
 }
 
@@ -263,8 +265,6 @@ func (l *LegacyHeaders) getExtraClaimsHeaders() []Header {
 			},
 		})
 	}
-
-	logger.Printf("ExtraClaimsHeaders: %+v", headers)
 
 	return headers
 }
