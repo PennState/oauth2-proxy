@@ -40,7 +40,6 @@ var _ Provider = (*AzureProvider)(nil)
 const (
 	azureProviderName = "Azure"
 	azureDefaultScope = "openid"
-	azureUserClaim    = "upn"
 )
 
 var (
@@ -184,45 +183,40 @@ func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *s
 	// due to above issues, id_token may not be signed by AAD
 	// in that case, we will fallback to access token
 	for n, token := range map[string]string{"IDToken": session.IDToken, "AccessToken": session.AccessToken} {
-		if session.User == "" || session.Email == "" {
-			claims, err := p.verifyTokenAndExtractClaims(ctx, token)
-			if err != nil {
-				return fmt.Errorf("unable to get claims from %s: %v", n, err)
-			}
+		claims, err := p.verifyTokenAndExtractClaims(ctx, token)
+		if err != nil {
+			return fmt.Errorf("unable to verify token and get claims from %s: %v", n, err)
+		}
 
-			if session.Email == "" {
-				// otherwise fall back to email claim
-				if claims.Email != "" {
-					session.Email = claims.Email
-				}
+		if session.Email == "" {
+			if claims.Email != "" {
+				session.Email = claims.Email
 			}
+		}
 
-			if session.User == "" {
-				// set User from azureUserClaim, or from Email if it's set
-				if claims.raw[azureUserClaim] != "" {
-					session.User = fmt.Sprint(claims.raw[azureUserClaim])
-				} else if session.Email != "" {
-					session.User = session.Email
-				}
-			}
+		if len(session.Groups) == 0 && len(claims.Groups) > 0 {
+			session.Groups = claims.Groups
+		}
 
-			for _, c := range p.ExtraClaims {
-				logger.Printf("Checking for extra claim %s", c)
-				if v, ok := claims.raw[c].(string); ok {
-					logger.Printf("Found extra claim, storing in session %s = %s", c, v)
+		for _, c := range p.ExtraClaims {
+			logger.Printf("Checking for extra claim %s", c)
+			if v, ok := claims.raw[c].(string); ok {
+				if v != "" {
+					logger.Printf("Found extra claim, storing in session. %s = %s", c, v)
 					session.ExtraClaims[c] = v
 				}
 			}
 		}
+
 	}
 
 	return nil
 }
 
-// EnrichSession finds the email and UPN to enrich the session state if they are not already set
+// EnrichSession finds the email to enrich the session state if they are not already set
 func (p *AzureProvider) EnrichSession(ctx context.Context, s *sessions.SessionState) error {
-	// skip if Email and User are already set
-	if s.Email != "" && s.User != "" {
+	// skip if Email is already set
+	if s.Email != "" {
 		return nil
 	}
 
@@ -233,10 +227,6 @@ func (p *AzureProvider) EnrichSession(ctx context.Context, s *sessions.SessionSt
 
 	if user.Mail != "" {
 		s.Email = user.Mail
-	}
-
-	if user.UserPrincipalName != "" {
-		s.User = user.UserPrincipalName
 	}
 
 	return nil
