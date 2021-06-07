@@ -208,8 +208,6 @@ func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *s
 		}
 
 	}
-
-	return nil
 }
 
 // EnrichSession finds the email to enrich the session state if they are not already set
@@ -325,10 +323,7 @@ func (p *AzureProvider) redeemRefreshToken(ctx context.Context, s *sessions.Sess
 	s.CreatedAt = &now
 	s.ExpiresOn = &expires
 
-	err = p.populateSessionFromToken(ctx, s)
-	if err != nil {
-		logger.Errorf("error populating session from tokens: %s", err)
-	}
+	p.populateSessionFromToken(ctx, s)
 
 	return
 }
