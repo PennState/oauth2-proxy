@@ -169,23 +169,22 @@ func (p *AzureProvider) Redeem(ctx context.Context, redirectURL, code string) (*
 		ExtraClaims:  make(map[string]string),
 	}
 
-	err = p.populateSessionFromToken(ctx, session)
-	if err != nil {
-		logger.Errorf("error populating session from tokens: %s", err)
-	}
+	p.populateSessionFromToken(ctx, session)
 
 	return session, nil
 }
 
-func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *sessions.SessionState) error {
+func (p *AzureProvider) populateSessionFromToken(ctx context.Context, session *sessions.SessionState) {
 	// https://github.com/oauth2-proxy/oauth2-proxy/pull/914#issuecomment-782285814
 	// https://github.com/AzureAD/azure-activedirectory-library-for-java/issues/117
 	// due to above issues, id_token may not be signed by AAD
 	// in that case, we will fallback to access token
 	for n, token := range map[string]string{"IDToken": session.IDToken, "AccessToken": session.AccessToken} {
+		logger.Printf("Checking claims in %s", n)
 		claims, err := p.verifyTokenAndExtractClaims(ctx, token)
 		if err != nil {
-			return fmt.Errorf("unable to verify token and get claims from %s: %v", n, err)
+			logger.Errorf("unable to verify token and get claims from %s: %v", n, err)
+			continue
 		}
 
 		if session.Email == "" {
